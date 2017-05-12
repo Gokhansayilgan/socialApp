@@ -19,9 +19,15 @@ class SignInVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+       
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        if let _ = KeychainWrapper.standard.string(forKey: KEY_UID) {
+            print("Gökhan: ID found in keychain")
+            performSegue(withIdentifier: "goToFeed", sender: nil)
+        }
+    }
    
 
     @IBAction func facebookBtnTapped(_ sender: Any) {
@@ -49,6 +55,10 @@ class SignInVC: UIViewController {
                 print("Gökhan: unable to authenticate with Firebase - \(error)")
             } else {
                 print("Gökhan: Successfully authenticated with Firebase ")
+                if let user = user {
+                  self.completeSignIn(id: user.uid)
+                }
+                
             }
         })
     }
@@ -60,17 +70,32 @@ class SignInVC: UIViewController {
                 if error == nil {
                     
                     print("Gökhan: Email user authenticated with Firebase")
+                    if let user = user {
+                        self.completeSignIn(id: user.uid)
+                    }
+                    
                 } else {
                     FIRAuth.auth()?.createUser(withEmail: email, password: pwd, completion: { (user, error) in
                         if error != nil {
                             print("Gökhan: Unable to authenticate with Firebase using email")
                         } else {
                             print("Gökhan: Succesfully authenticated with Firebase")
+                            if let user = user {
+                                self.completeSignIn(id: user.uid)
+                            }
+                            
                         }
                     })
                 }
             })
         }
+    }
+    
+    
+    func completeSignIn(id: String){
+       let keychainResult =  KeychainWrapper.standard.set(id, forKey: KEY_UID)
+        print("Gökhan: Data saved to keychain \(keychainResult)")
+        performSegue(withIdentifier: "goToFeed", sender: nil)
     }
 }
 
